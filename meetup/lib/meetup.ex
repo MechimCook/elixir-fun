@@ -34,7 +34,7 @@ defmodule Meetup do
   def meetup(year, month, weekday, schedule) do
     case Date.new(year, month, 1) do
       {:ok, date} ->
-        get_day(date, @weeknums[weekday], schedule)
+        get_day(date, @weeknums[weekday])
         |> get_nth(date, schedule)
 
       {:error, error} ->
@@ -46,7 +46,15 @@ defmodule Meetup do
   defp get_nth(first_day, date, :second), do: Date.add(date, first_day + 7)
   defp get_nth(first_day, date, :third), do: Date.add(date, first_day + 14)
   defp get_nth(first_day, date, :fourth), do: Date.add(date, first_day + 21)
-  defp get_nth(last_day, date, :last), do: Date.add(date, last_day)
+  defp get_nth(first_day, date, :fifth), do: Date.add(date, first_day + 28)
+
+  defp get_nth(first_day, date, :last) do
+    if first_day + 28 < Date.days_in_month(date) do
+      get_nth(first_day, date, :fifth)
+    else
+      get_nth(first_day, date, :fourth)
+    end
+  end
 
   defp get_nth(first_day, date, :teenth) do
     if first_day + 7 >= 12 do
@@ -56,26 +64,7 @@ defmodule Meetup do
     end
   end
 
-  defp get_day(date, day, :last) do
-    days_in_month = Date.days_in_month(date) - 1
-
-    current_day =
-      Date.add(date, days_in_month)
-      |> Date.day_of_week()
-
-    cond do
-      current_day == day ->
-        days_in_month
-
-      current_day < day ->
-        days_in_month + day - 7 - current_day
-
-      current_day > day ->
-        days_in_month + day - current_day
-    end
-  end
-
-  defp get_day(date, day, _) do
+  defp get_day(date, day) do
     current_day = Date.day_of_week(date)
 
     cond do
