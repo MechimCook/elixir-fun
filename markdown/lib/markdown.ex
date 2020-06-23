@@ -1,4 +1,7 @@
 defmodule Markdown do
+  @strong_tag ~r/__[^_]{1,}__/
+  @em_tag ~r/_(?<!__)[^_]{1,}_(?!_)/
+
   @doc """
     Parses a given string with Markdown syntax and returns the associated HTML for that string.
 
@@ -14,13 +17,10 @@ defmodule Markdown do
   def parse(markdown) do
     replace_md_with_tag(markdown)
     |> String.split("\n")
-    |> Enum.map(&process(&1))
+    |> Stream.map(&process(&1))
     |> Enum.join()
     |> patch()
   end
-
-  @strong_tag ~r/__[^_]{1,}__/
-  @em_tag ~r/_(?<!__)[^_]{1,}_(?!_)/
 
   defp replace_md_with_tag(w) do
     String.replace(w, @strong_tag, "<strong>\\g{0}</strong>")
@@ -28,19 +28,9 @@ defmodule Markdown do
     |> String.replace("_", "")
   end
 
-  defp process(t) do
-    cond do
-      String.starts_with?(t, "#") ->
-        parse_header_md_level(t)
-        |> enclose_with_header_tag()
-
-      String.starts_with?(t, "*") ->
-        parse_list_md_level(t)
-
-      true ->
-        "<p>#{t}</p>"
-    end
-  end
+  defp process("#" <> t), do: parse_header_md_level("##{t}") |> enclose_with_header_tag()
+  defp process("*" <> t), do: parse_list_md_level("*#{t}")
+  defp process(t), do: "<p>#{t}</p>"
 
   defp parse_header_md_level(hwt) do
     [h | t] = String.split(hwt)
