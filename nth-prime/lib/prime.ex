@@ -3,16 +3,17 @@ defmodule Prime do
   Generates the nth prime.
   """
   @spec nth(non_neg_integer) :: non_neg_integer
-  def nth(1), do: 2
-  def nth(count) when count > 1, do: nth([2], 3, count - 1)
+  def nth(count) when count < 1, do: raise(ArgumentError)
 
-  defp nth([nth_prime | _primes], _current, 0), do: nth_prime
+  def nth(count),
+    do:
+      Stream.iterate(2, &(&1 + 1)) |> Stream.filter(&prime?/1) |> Enum.take(count) |> List.last()
 
-  defp nth(primes, current, count) do
-    if Enum.any?(primes, fn prime -> rem(current, prime) == 0 end) do
-      nth(primes, current + 1, count)
-    else
-      nth([current | primes], current + 1, count - 1)
-    end
-  end
+  defp prime?(2), do: true
+  defp prime?(n) when rem(n, 2) == 0, do: false
+  defp prime?(n), do: prime?(n, 3)
+
+  defp prime?(n, k) when n < k * k, do: true
+  defp prime?(n, k) when rem(n, k) == 0, do: false
+  defp prime?(n, k), do: prime?(n, k + 2)
 end
