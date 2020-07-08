@@ -1,4 +1,4 @@
-defmodule Zipper do
+defmodule(Zipper) do
   defstruct focus: nil, trail: []
   @type t :: %Zipper{focus: any, trail: list}
   @doc """
@@ -24,7 +24,7 @@ defmodule Zipper do
   Get the left child of the focus node, if any.
   """
   @spec left(Zipper.t()) :: Zipper.t() | nil
-  def left(%{focus: %{value: value, left: nil, right: right}, trail: trail}), do: nil
+  def left(%{focus: %{left: nil}}), do: nil
 
   def left(%{focus: %{value: value, left: left, right: right}, trail: trail}),
     do: %Zipper{focus: left, trail: [{value, :right, right} | trail]}
@@ -40,7 +40,7 @@ defmodule Zipper do
   Get the parent of the focus node, if any.
   """
   @spec up(Zipper.t()) :: Zipper.t() | nil
-  def up(%{focus: tree, trail: []}), do: nil
+  def up(%{trail: []}), do: nil
 
   def up(%{focus: right, trail: [{value, :left, left} | trail]}),
     do: %Zipper{focus: %BinTree{value: value, left: left, right: right}, trail: trail}
