@@ -5,18 +5,7 @@ defmodule RailFenceCipher do
   @spec encode(String.t(), pos_integer) :: String.t()
   def encode("", _), do: ""
   def encode(str, 1), do: str
-  def encode(str, rails) when rails > byte_size(str), do: str
-
-  def encode(str, rails) do
-    (Enum.to_list(0..(rails - 1)) ++ Enum.to_list((rails - 2)..1))
-    |> Stream.cycle()
-    |> Enum.take(byte_size(str))
-    |> Enum.reduce({%{}, String.codepoints(str)}, fn index,
-                                                     {encoded, [current | codepoints]} = acc ->
-      acc = {Map.update(encoded, index, current, &(&1 <> current)), codepoints}
-    end)
-    |> proccess_map_tuple()
-  end
+  def encode(str, rails), do: str |> to_charlist |> zigzag(rails) |> to_string
 
   @doc """
   Decode a given rail fence ciphertext to the corresponding plaintext
@@ -25,38 +14,16 @@ defmodule RailFenceCipher do
   @spec decode(String.t(), pos_integer) :: String.t()
   def decode("", _), do: ""
   def decode(str, 1), do: str
-  def decode(str, rails) when rails > byte_size(str), do: str
 
   def decode(str, rails) do
-    cypher = String.codepoints(str)
-
-    (Enum.to_list(1..rails) ++ Enum.to_list((rails - 1)..2))
-    |> Stream.cycle()
-    |> Enum.take(byte_size(str))
-    |> fence(cypher, 1, rails)
+    0..(String.length(str) - 1)
+    |> zigzag(rails)
+    |> Enum.zip(String.codepoints(str))
+    |> Enum.sort()
+    |> Enum.map_join(fn {_, v} -> v end)
   end
 
-  defp fence(key, cypher, current_rail, max_rail),
-    do: fence({key, cypher}, current_rail, max_rail)
-
-  defp fence({key, cypher}, max_rail, max_rail) do
-    Enum.map_reduce(key, {max_rail, cypher}, &proccess_cypher(&1, &2))
-    |> proccess_tuple()
-  end
-
-  defp fence({key, cypher}, current_rail, max_rail) do
-    Enum.map_reduce(key, {current_rail, cypher}, &proccess_cypher(&1, &2))
-    |> remove_rail()
-    |> fence(current_rail + 1, max_rail)
-  end
-
-  defp proccess_cypher(value, {current_rail, [current | cypher]} = acc),
-    do: if(value == current_rail, do: {current, {current_rail, cypher}}, else: {value, acc})
-
-  defp proccess_cypher(value, {current_rail, []} = acc), do: {value, acc}
-
-  defp proccess_map_tuple({encoded, _}), do: Map.values(encoded) |> Enum.join()
-
-  defp proccess_tuple({cypher, _}), do: Enum.join(cypher)
-  defp remove_rail({key, {_rail, cypher}}), do: {key, cypher}
+  defp zigzag(enum, rails), do: for(i <- 1..rails, {x, ^i} <- split(enum, rails), do: x)
+  defp split(enum, rails), do: Enum.zip(enum, fence(rails))
+  defp fence(rails), do: 1..(rails - 1) |> Stream.concat(rails..2) |> Stream.cycle()
 end
