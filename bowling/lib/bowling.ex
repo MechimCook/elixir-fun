@@ -4,12 +4,16 @@ defmodule Bowling do
     the game
   """
   @max_pins 10
+  @max_frames 10
+  @strike 10
+  @max_balls 2
   @frame %{balls_left: 2, pins: @max_pins}
   @game %{frames: [], results: []}
 
   @spec start() :: any
   def start,
-    do: Stream.iterate(@frame, & &1) |> Enum.take(10) |> (&Map.put(@game, :frames, &1)).()
+    do:
+      Stream.iterate(@frame, & &1) |> Enum.take(@max_frames) |> (&Map.put(@game, :frames, &1)).()
 
   @doc """
     Records the number of pins knocked down on a single roll. Returns `any`
@@ -34,7 +38,7 @@ defmodule Bowling do
   # rolling tenth frame without bonus
   def roll(%{frames: [%{balls_left: balls, pins: pins} | []], results: results}, roll),
     do:
-      if(balls == 2,
+      if(balls == @max_balls,
         do: %{frames: [%{balls_left: 1, pins: pins - roll} | []], results: results ++ [roll]},
         else: results ++ [roll, 0]
       )
@@ -43,9 +47,14 @@ defmodule Bowling do
   def roll(%{bonus: bonus, results: results}, roll),
     do:
       (case({bonus, roll}) do
-         {1, _} -> results ++ [roll]
-         {2, 10} -> %{frames: [%{pins: @max_pins}], bonus: 1, results: results ++ [roll]}
-         {2, _} -> %{frames: [%{pins: @max_pins - roll}], bonus: 1, results: results ++ [roll]}
+         {1, _} ->
+           results ++ [roll]
+
+         {@max_balls, @max_frames} ->
+           %{frames: [%{pins: @max_pins}], bonus: 1, results: results ++ [roll]}
+
+         {@max_balls, _} ->
+           %{frames: [%{pins: @max_pins - roll}], bonus: 1, results: results ++ [roll]}
        end)
 
   # strike rolls
@@ -55,7 +64,7 @@ defmodule Bowling do
   # not strike rolls
   def roll(%{frames: [%{balls_left: balls, pins: pins} | frames], results: results}, roll),
     do:
-      if(balls == 2,
+      if(balls == @max_balls,
         do: %{
           frames: [%{balls_left: 1, pins: pins - roll} | frames],
           results: results ++ [roll]
@@ -75,7 +84,7 @@ defmodule Bowling do
     do: tally + ball1 + ball2 + ball3
 
   # score strikes
-  def score([10 | [ball2 | [ball3 | game]]], tally),
+  def score([@strike | [ball2 | [ball3 | game]]], tally),
     do: score([ball2 | [ball3 | game]], tally + @max_pins + ball2 + ball3)
 
   # score spares
