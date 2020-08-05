@@ -15,49 +15,24 @@ defmodule SecretHandshake do
   """
   @spec commands(code :: integer) :: list(String.t())
   def commands(code) do
-    case Integer.digits(code, 2) do
-      [1, j, e, b, w] ->
-        [jump(j), eyes(e), blink(b), wink(w)]
-
-      [1, e, b, w] ->
-        [wink(w), blink(b), eyes(e), "jump"]
-
-      [1, b, w] ->
-        [wink(w), blink(b), "close your eyes"]
-
-      [1, w] ->
-        [wink(w), "double blink"]
-
-      [1] ->
-        ["wink"]
-
-      _ ->
-        []
-    end
+    Integer.digits(code, 2)
+    |> do_commands()
     |> Enum.reject(fn x -> x == nil end)
   end
 
-  defp wink(w) do
-    if w == 1 do
-      "wink"
-    end
-  end
+  defp do_commands([1, j, e, b, w]), do: [jump(j), eyes(e), blink(b), wink(w)]
+  defp do_commands([1, e, b, w]), do: [wink(w), blink(b), eyes(e), "jump"]
+  defp do_commands([1, b, w]), do: [wink(w), blink(b), "close your eyes"]
+  defp do_commands([1, w]), do: [wink(w), "double blink"]
+  defp do_commands([1]), do: ["wink"]
+  defp do_commands(_), do: []
 
-  defp blink(w) do
-    if w == 1 do
-      "double blink"
-    end
-  end
-
-  defp eyes(w) do
-    if w == 1 do
-      "close your eyes"
-    end
-  end
-
-  defp jump(w) do
-    if w == 1 do
-      "jump"
-    end
-  end
+  defp wink(1), do: "wink"
+  defp wink(_), do: nil
+  defp blink(1), do: "double blink"
+  defp blink(_), do: nil
+  defp eyes(1), do: "close your eyes"
+  defp eyes(_), do: nil
+  defp jump(1), do: "jump"
+  defp jump(_), do: nil
 end
