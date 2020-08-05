@@ -1,4 +1,8 @@
 defmodule SecretHandshake do
+  use Bitwise
+
+  @shake_codes [0b00001, 0b00010, 0b00100, 0b01000, 0b10000]
+
   @doc """
   Determine the actions of a secret handshake based on the binary
   representation of the given `code`.
@@ -15,24 +19,13 @@ defmodule SecretHandshake do
   """
   @spec commands(code :: integer) :: list(String.t())
   def commands(code) do
-    Integer.digits(code, 2)
-    |> do_commands()
-    |> Enum.reject(fn x -> x == nil end)
+    Enum.reduce(@shake_codes, [], &command_map(&1 &&& code, &2))
   end
 
-  defp do_commands([1, j, e, b, w]), do: [jump(j), eyes(e), blink(b), wink(w)]
-  defp do_commands([1, e, b, w]), do: [wink(w), blink(b), eyes(e), "jump"]
-  defp do_commands([1, b, w]), do: [wink(w), blink(b), "close your eyes"]
-  defp do_commands([1, w]), do: [wink(w), "double blink"]
-  defp do_commands([1]), do: ["wink"]
-  defp do_commands(_), do: []
-
-  defp wink(1), do: "wink"
-  defp wink(_), do: nil
-  defp blink(1), do: "double blink"
-  defp blink(_), do: nil
-  defp eyes(1), do: "close your eyes"
-  defp eyes(_), do: nil
-  defp jump(1), do: "jump"
-  defp jump(_), do: nil
+  defp command_map(0b00001, shake), do: shake ++ ["wink"]
+  defp command_map(0b00010, shake), do: shake ++ ["double blink"]
+  defp command_map(0b00100, shake), do: shake ++ ["close your eyes"]
+  defp command_map(0b01000, shake), do: shake ++ ["jump"]
+  defp command_map(0b10000, shake), do: Enum.reverse(shake)
+  defp command_map(_, shake), do: shake
 end
