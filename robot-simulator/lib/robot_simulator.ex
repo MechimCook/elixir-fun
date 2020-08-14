@@ -1,7 +1,8 @@
 defmodule RobotSimulator do
   @directions [:north, :east, :south, :west]
 
-  defguard is_direction(direction) when is_atom(direction) and direction in @directions
+  defguard is_direction?(direction) when is_atom(direction) and direction in @directions
+  defguard valid_position?(x, y) when is_integer(x) and is_integer(y)
 
   @doc """
   Create a Robot Simulator given an initial direction and position.
@@ -9,25 +10,12 @@ defmodule RobotSimulator do
   Valid directions are: `:north`, `:east`, `:south`, `:west`
   """
   @spec create(direction :: atom, position :: {integer, integer}) :: any
-<<<<<<< HEAD
   def create(direction \\ :north, {x, y} \\ {0, 0})
-      when is_direction(direction) and is_integer(x) and is_integer(y),
+      when is_direction(direction) and valid_position?(x, y),
       do: {direction, {x, y}}
 
   def create(direction, _position) when is_direction(direction), do: {:error, "invalid position"}
   def create(_direction, _position), do: {:error, "invalid direction"}
-=======
-
-  def create(direction \\ :north, {x, y} \\ {0, 0})
-      when is_integer(x) and is_integer(y) and is_direction(direction),
-      do: {direction, {x, y}}
-
-  def create(direction, _position) when is_direction(direction),
-    do: {:error, "invalid position"}
-
-  def create(_direction, _position),
-    do: {:error, "invalid direction"}
->>>>>>> Robot-sim
 
   @doc """
   Simulate the robot's movement given a string of instructions.
@@ -35,7 +23,6 @@ defmodule RobotSimulator do
   Valid instructions are: "R" (turn right), "L", (turn left), and "A" (advance)
   """
   @spec simulate(robot :: any, instructions :: String.t()) :: any
-<<<<<<< HEAD
   def simulate(robot, instructions) do
     String.codepoints(instructions)
     |> Enum.reduce_while(
@@ -51,35 +38,7 @@ defmodule RobotSimulator do
       end
     )
   end
-=======
->>>>>>> Robot-sim
 
-  @right %{north: :east, east: :south, south: :west, west: :north}
-  @left %{north: :west, east: :north, south: :east, west: :south}
-
-<<<<<<< HEAD
-  defp instruct("L", {direction, position}), do: {@left[direction], position}
-
-  defp instruct("R", {direction, position}), do: {@right[direction], position}
-
-  defp instruct("A", {direction, {x, y}}) do
-    case direction do
-      :north ->
-        {direction, {x, y + 1}}
-
-      :east ->
-        {direction, {x + 1, y}}
-
-      :south ->
-        {direction, {x, y - 1}}
-
-      :west ->
-        {direction, {x - 1, y}}
-    end
-  end
-
-  defp instruct(_, _), do: :error
-=======
   def simulate({direction, position}, "L" <> tail),
     do: simulate({@left[direction], position}, tail)
 
@@ -92,7 +51,6 @@ defmodule RobotSimulator do
   def simulate({:west, {x, y}}, "A" <> tail), do: simulate({:west, {x - 1, y}}, tail)
   def simulate(robot, ""), do: robot
   def simulate(_, _), do: {:error, "invalid instruction"}
->>>>>>> Robot-sim
 
   @doc """
   Return the robot's direction.
