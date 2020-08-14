@@ -7,7 +7,7 @@ defmodule StringSeries do
   defguard is_valid(s, size) when size > 0 and byte_size(s) >= size
   @spec slices(s :: String.t(), size :: integer) :: list(String.t())
   def slices(s, size) when is_valid(s, size),
-    do: 0..(String.length(s) - size) |> Enum.map(&String.slice(s, &1..(&1 + size - 1)))
+    do: 0..(String.length(s) - size) |> Enum.map(&String.slice(s, &1, size))
 
   def slices(s, size), do: []
 end
